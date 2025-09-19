@@ -40,7 +40,26 @@ const storage = multer.diskStorage({
         cb(null, uniquePrefix + '-' + file.originalname);
     }
 });
-const upload = multer({ storage: storage });
+
+// File filter function to validate file types
+const fileFilter = (req, file, cb) => {
+    const allowedExtensions = ['txt', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'];
+    const fileExtension = file.originalname.split('.').pop().toLowerCase();
+    
+    if (allowedExtensions.includes(fileExtension)) {
+        cb(null, true);
+    } else {
+        cb(new Error(`Desteklenmeyen dosya formatı: ${fileExtension}. İzin verilen formatlar: ${allowedExtensions.join(', ')}`), false);
+    }
+};
+
+const upload = multer({ 
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 3 * 1024 * 1024 // 3 MB limit
+    }
+});
 
 // --- EKLENTİ (ATTACHMENT) API'LARI ---
 router.get('/bulgu/:id/attachments', (req, res) => {
@@ -52,9 +71,27 @@ router.get('/bulgu/:id/attachments', (req, res) => {
     });
 });
 
-router.post('/bulgu/:id/attachments', upload.array('attachments', 5), (req, res) => {
-    const { id: bulguId } = req.params;
-    if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'Yüklenecek dosya seçilmedi.' });
+router.post('/bulgu/:id/attachments', (req, res) => {
+    upload.array('attachments', 5)(req, res, (err) => {
+        if (err) {
+            // Handle multer errors
+            if (err instanceof multer.MulterError) {
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    return res.status(400).json({ error: 'Dosya boyutu 3 MB sınırını aşıyor.' });
+                }
+                if (err.code === 'LIMIT_FILE_COUNT') {
+                    return res.status(400).json({ error: 'En fazla 5 dosya yükleyebilirsiniz.' });
+                }
+                return res.status(400).json({ error: `Dosya yükleme hatası: ${err.message}` });
+            }
+            // Handle custom file filter errors
+            return res.status(400).json({ error: err.message });
+        }
+        
+        const { id: bulguId } = req.params;
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ error: 'Yüklenecek dosya seçilmedi.' });
+        }
 
     const sql = `INSERT INTO attachments (bulguId, originalName, fileName, filePath, fileSize, mimeType) VALUES (?, ?, ?, ?, ?, ?)`;
     const insertPromises = req.files.map(file => {
@@ -76,6 +113,7 @@ router.post('/bulgu/:id/attachments', upload.array('attachments', 5), (req, res)
     Promise.all(insertPromises)
         .then(insertedFiles => res.status(201).json({ message: 'Dosyalar başarıyla yüklendi.', files: insertedFiles }))
         .catch(err => res.status(500).json({ error: 'Dosyalar veritabanına kaydedilirken bir hata oluştu.' }));
+    });
 });
 
 router.delete('/attachments/:id', (req, res) => {

@@ -1,11 +1,15 @@
     function getBulgularTableHTML(bulgular) {
         const getBadgeClass = (text) => {
              switch (text) {
-                case "Açık": case "Yüksek": case "Program Hatası": return 'bg-red-100 text-red-800';
-                case "Test Edilecek": case "Yeni Talep": return 'bg-blue-100 text-blue-800';
-                case "Orta": return 'bg-yellow-100 text-yellow-800';
-                case "Kapalı": case "Düşük": return 'bg-gray-100 text-gray-800';
-                default: return 'bg-gray-100 text-gray-800';
+                case "Açık": return 'px-2 py-1 text-xs font-medium rounded-full badge-acik';
+                case "Yüksek": return 'px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 border border-red-200';
+                case "Program Hatası": return 'px-2 py-1 text-xs font-medium rounded-full badge-program-hatasi';
+                case "Test Edilecek": return 'px-2 py-1 text-xs font-medium rounded-full badge-test-edilecek';
+                case "Yeni Talep": return 'px-2 py-1 text-xs font-medium rounded-full badge-yeni-talep';
+                case "Orta": return 'px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200';
+                case "Kapalı": return 'px-2 py-1 text-xs font-medium rounded-full badge-kapali';
+                case "Düşük": return 'px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200';
+                default: return 'px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200';
             }
         };
 
@@ -47,13 +51,13 @@
                 <td class="p-3 text-sm text-gray-600">${vendorName}</td>
                 <td class="p-3 text-sm text-gray-600">${versionName || '-'}</td>
                 <td class="p-3 text-xs text-gray-500">${formattedModelsHtml}</td>
-                <td class="p-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${getBadgeClass(bulgu.bulguTipi)}">${bulgu.bulguTipi}</span></td>
-                <td class="p-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${getBadgeClass(bulgu.etkiSeviyesi)}">${bulgu.etkiSeviyesi}</span></td>
+                <td class="p-3"><span class="${getBadgeClass(bulgu.bulguTipi)}">${bulgu.bulguTipi}</span></td>
+                <td class="p-3"><span class="${getBadgeClass(bulgu.etkiSeviyesi)}">${bulgu.etkiSeviyesi}</span></td>
                 <td class="p-3 text-sm text-gray-600">${tespit}</td>
                 <td class="p-3 text-sm text-gray-600">${bulgu.girenKullanici || ''}</td>
                 <td class="p-3 text-sm text-gray-600">${onaylayan}</td>
                 <td class="p-3 text-sm text-gray-600">${onayTarihi}</td>
-                <td class="p-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${getBadgeClass(bulgu.status)}">${bulgu.status}</span></td>
+                <td class="p-3"><span class="${getBadgeClass(bulgu.status)}">${bulgu.status}</span></td>
                 <td class="p-3 text-right">
                     <button type="button" class="edit-bulgu-btn inline-flex items-center justify-center p-1 text-blue-600 hover:text-blue-800" data-bulgu-id="${bulgu.id}" aria-label="Bulgu düzenle">
                         ${editIcon}

@@ -51,26 +51,176 @@
         .chart-container { position: relative; height: 100%; }
         .chart-container canvas { width: 100% !important; height: 100% !important; }
         .chart-container.chart-container--pie { padding-bottom: 1.5rem; }
-        .bulgu-type-toggle-group { gap: 0.5rem; }
-        .bulgu-type-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.4rem 0.75rem;
-            border-radius: 9999px;
-            border: 1px solid #d1d5db;
-            background-color: #f9fafb;
-            color: #374151;
-            font-size: 0.75rem;
+        
+        /* Enhanced badge styles for bulgu types */
+        .badge-program-hatasi {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            color: #991b1b;
+            border: 1px solid #fecaca;
             font-weight: 600;
+            box-shadow: 0 1px 3px 0 rgba(220, 38, 38, 0.1), 0 1px 2px 0 rgba(220, 38, 38, 0.06);
             transition: all 0.2s ease;
         }
-        .bulgu-type-toggle .count { font-weight: 700; font-size: 0.8rem; }
-        .bulgu-type-toggle:hover { background-color: #e5f6f1; border-color: #01a76d; color: #03624a; }
-        .bulgu-type-toggle.type-toggle-active {
-            background-color: #01a76d;
-            color: #ffffff;
-            border-color: #019161;
+        .badge-program-hatasi:hover {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.1), 0 2px 4px -1px rgba(220, 38, 38, 0.06);
+        }
+        .badge-yeni-talep {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            font-weight: 600;
+            box-shadow: 0 1px 3px 0 rgba(5, 150, 105, 0.1), 0 1px 2px 0 rgba(5, 150, 105, 0.06);
+            transition: all 0.2s ease;
+        }
+        .badge-yeni-talep:hover {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.1), 0 2px 4px -1px rgba(5, 150, 105, 0.06);
+        }
+        .badge-acik {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            box-shadow: 0 1px 2px 0 rgba(220, 38, 38, 0.05);
+        }
+        .badge-test-edilecek {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            box-shadow: 0 1px 2px 0 rgba(59, 130, 246, 0.05);
+        }
+        .badge-kapali {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            color: #374151;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 1px 2px 0 rgba(107, 114, 128, 0.05);
+        }
+        
+        /* Enhanced modal styles */
+        .modal-type-highlight {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        
+        /* Enhanced modal input field styles */
+        .modal-input-group {
+            position: relative;
+        }
+        .modal-input-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .modal-input-group label .icon {
+            color: #6b7280;
+            width: 1rem;
+            height: 1rem;
+        }
+        .modal-input-group input,
+        .modal-input-group select,
+        .modal-input-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background-color: #ffffff;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .modal-input-group input:focus,
+        .modal-input-group select:focus,
+        .modal-input-group textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            outline: none;
+        }
+        .modal-input-group input:hover:not(:focus),
+        .modal-input-group select:hover:not(:focus),
+        .modal-input-group textarea:hover:not(:focus) {
+            border-color: #d1d5db;
+        }
+        .modal-input-group input[readonly] {
+            background-color: #f9fafb;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+        .modal-input-group input[disabled],
+        .modal-input-group select[disabled] {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        /* Special styling for required field indicators */
+        .modal-input-group .text-red-500 {
+            color: #ef4444;
+            font-weight: 700;
+        }
+        
+        /* Enhanced file input styling */
+        .modal-input-group input[type="file"] {
+            border: 2px dashed #d1d5db;
+            padding: 1rem;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .modal-input-group input[type="file"]:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        /* Checkbox styling improvements */
+        .modal-input-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 0.5rem;
+        }
+        
+        /* Form field enhancements */
+        .field-highlight {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #93c5fd;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+        }
+        .field-highlight label {
+            color: #1e40af;
+            font-weight: 600;
+        }
+        
+        /* Animation classes */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Color palette variables */
+        :root {
+            --color-program-hatasi: #dc2626;
+            --color-program-hatasi-light: #fef2f2;
+            --color-program-hatasi-border: #fecaca;
+            --color-yeni-talep: #059669;
+            --color-yeni-talep-light: #ecfdf5;
+            --color-yeni-talep-border: #a7f3d0;
+            --color-status-acik: #dc2626;
+            --color-status-test: #2563eb;
+            --color-status-kapali: #6b7280;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
     </style>
 </head>
@@ -81,6 +231,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 <span class="whitespace-nowrap">POS Tracker</span>
             </div>
+            
             <hr class="border-gray-200"/>
             <nav class="flex flex-col gap-1">
                 <a href="#" id="nav-dashboard" class="sidebar-link gap-2 active">
@@ -89,7 +240,7 @@
                 </a>
                 <a href="#" id="nav-bulgular" class="sidebar-link gap-2">
                     <i data-lucide="bug" class="w-4 h-4" aria-hidden="true"></i>
-                    <span>Bulgu Takibi</span>
+                    <span>Bulgu & Talep Takibi</span>
                 </a>
                 <a href="#" id="nav-yonetim" class="sidebar-link gap-2">
                     <i data-lucide="settings" class="w-4 h-4" aria-hidden="true"></i>

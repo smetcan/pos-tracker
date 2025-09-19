@@ -6,11 +6,11 @@ const router = express.Router();
 function normalizeTR(text) {
     if (!text || typeof text !== 'string') return text;
     const map = new Map([
-        ['Ã‡','Ç'], ['Ã–','Ö'], ['Ãœ','Ü'],
-        ['Ã§','ç'], ['Ã¶','ö'], ['Ã¼','ü'],
-        ['ÅŸ','þ'], ['Åz','Þ'],
-        ['Ä±','ý'], ['Ä°','Ý'],
-        ['ÄŸ','ð'], ['Äz','Ð']
+        ['Ã‡','ï¿½'], ['Ã–','ï¿½'], ['Ãœ','ï¿½'],
+        ['Ã§','ï¿½'], ['Ã¶','ï¿½'], ['Ã¼','ï¿½'],
+        ['ÅŸ','ï¿½'], ['ï¿½z','ï¿½'],
+        ['Ä±','ï¿½'], ['Ä°','ï¿½'],
+        ['ÄŸ','ï¿½'], ['ï¿½z','ï¿½']
     ]);
     let out = text;
     for (const [bad, good] of map.entries()) out = out.split(bad).join(good);
@@ -135,7 +135,7 @@ router.get('/bulgular/export', (req, res) => {
 
         if (err) {
 
-            return res.status(500).json({ error: `Bulgu verileri dýþa aktarýlýrken hata: ${err.message}` });
+            return res.status(500).json({ error: `Bulgu verileri dï¿½ï¿½a aktarï¿½lï¿½rken hata: ${err.message}` });
 
         }
 
@@ -462,10 +462,46 @@ router.post('/bulgular/import', async (req, res) => {
         };
 
         const getField = (record, key) => {
-            if (record[key] !== undefined && record[key] !== null) return record[key];
+            console.log(`Looking for field '${key}' in record with keys:`, Object.keys(record));
+            
+            // First try exact match
+            if (record[key] !== undefined && record[key] !== null) {
+                console.log(`Found exact match for '${key}':`, record[key]);
+                return record[key];
+            }
+            
+            // Try with BOM character
             const bomChar = String.fromCharCode(0xFEFF);
             const bomKey = bomChar + key;
-            return record[bomKey];
+            if (record[bomKey] !== undefined && record[bomKey] !== null) {
+                console.log(`Found BOM match for '${key}':`, record[bomKey]);
+                return record[bomKey];
+            }
+            
+            // Try case-insensitive match
+            const keyLower = key.toLowerCase();
+            const foundKey = Object.keys(record).find(k => k.toLowerCase() === keyLower);
+            if (foundKey && record[foundKey] !== undefined && record[foundKey] !== null) {
+                console.log(`Found case-insensitive match for '${key}' as '${foundKey}':`, record[foundKey]);
+                return record[foundKey];
+            }
+            
+            // Try trimmed keys (in case of extra spaces)
+            const trimmedKey = Object.keys(record).find(k => k.trim() === key.trim());
+            if (trimmedKey && record[trimmedKey] !== undefined && record[trimmedKey] !== null) {
+                console.log(`Found trimmed match for '${key}' as '${trimmedKey}':`, record[trimmedKey]);
+                return record[trimmedKey];
+            }
+            
+            // Try with quotes removed from keys (Papa Parse might include quotes in field names)
+            const unquotedKey = Object.keys(record).find(k => k.replace(/"/g, '') === key);
+            if (unquotedKey && record[unquotedKey] !== undefined && record[unquotedKey] !== null) {
+                console.log(`Found unquoted match for '${key}' as '${unquotedKey}':`, record[unquotedKey]);
+                return record[unquotedKey];
+            }
+            
+            console.log(`No match found for field '${key}'`);
+            return undefined;
         };
 
         for (let i = 0; i < records.length; i++) {
@@ -473,12 +509,33 @@ router.post('/bulgular/import', async (req, res) => {
             const rowIndex = i + 1;
 
             try {
+                // Debug: Log the first record to see structure
+                if (i === 0) {
+                    console.log('=== CSV PARSING DEBUG ===');
+                    console.log('Total records:', records.length);
+                    console.log('First record keys:', Object.keys(record));
+                    console.log('First record keys length:', Object.keys(record).length);
+                    console.log('First record values:', record);
+                    console.log('Looking for Vendor field...');
+                    console.log('getField(record, "Vendor"):', getField(record, 'Vendor'));
+                    console.log('getField(record, "vendor"):', getField(record, 'vendor'));
+                    console.log('Raw CSV data preview:', JSON.stringify(record).substring(0, 200));
+                    console.log('========================');
+                }
+
                 const baslik = cleanCell(getField(record, 'Baslik'));
                 const vendorName = cleanCell(getField(record, 'Vendor'));
                 const bulguTipi = cleanCell(getField(record, 'Bulgu Tipi'));
                 const etkiSeviyesi = cleanCell(getField(record, 'Etki Seviyesi'));
                 const tespitTarihi = cleanCell(getField(record, 'Tespit Tarihi'));
                 const girenKisi = cleanCell(getField(record, 'Giren Kisi'));
+
+                // Debug: Log extracted values for first record
+                if (i === 0) {
+                    console.log('Extracted values:', {
+                        baslik, vendorName, bulguTipi, etkiSeviyesi, tespitTarihi, girenKisi
+                    });
+                }
 
                 const requiredFields = ['Baslik', 'Vendor', 'Bulgu Tipi', 'Etki Seviyesi', 'Tespit Tarihi', 'Giren Kisi'];
                 const requiredValues = {
@@ -495,6 +552,7 @@ router.post('/bulgular/import', async (req, res) => {
                 }
 
                 const detayliAciklama = cleanCell(getField(record, 'Detayli Aciklama'));
+                const notlar = cleanCell(getField(record, 'Notlar'));
                 const vendorTrackerNo = cleanCell(getField(record, 'Vendor Takip No'));
                 const status = cleanCell(getField(record, 'Durum')) || 'A\u00E7\u0131k';
                 const cozumOnaylayanKisi = cleanCell(getField(record, 'Cozum Onaylayan Kisi'));
@@ -538,12 +596,12 @@ router.post('/bulgular/import', async (req, res) => {
                 await dbRun('BEGIN TRANSACTION');
 
                 const bulguSql = `
-                    INSERT INTO Bulgu (baslik, bulguTipi, etkiSeviyesi, tespitTarihi, detayliAciklama, girenKullanici, vendorTrackerNo, status, cozumOnaylayanKullanici, cozumOnayTarihi, vendorId, cozumVersiyonId)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                    INSERT INTO Bulgu (baslik, bulguTipi, etkiSeviyesi, tespitTarihi, detayliAciklama, notlar, girenKullanici, vendorTrackerNo, status, cozumOnaylayanKullanici, cozumOnayTarihi, vendorId, cozumVersiyonId)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
                 const bulguParams = [
                     baslik, bulguTipi, etkiSeviyesi, tespitTarihi,
-                    detayliAciklama || null, girenKisi, vendorTrackerNo || null,
+                    detayliAciklama || null, notlar || null, girenKisi, vendorTrackerNo || null,
                     status, cozumOnaylayanKisi || null, cozumOnayTarihi || null,
                     vendorId, cozumVersiyonId
                 ];

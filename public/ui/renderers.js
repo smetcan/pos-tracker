@@ -14,31 +14,75 @@ function renderDashboardCharts(stats) {
 
     const types = Array.from(new Set([...statusByType.map(item => item.type), ...vendorByType.map(item => item.type)])).filter(Boolean);
 
-    // Pie chart: stacked dataset by type per status (showing distribution per type).
+    // Pie chart: separate segments for each type-status combination
     const pieCtx = document.getElementById('statusPieChart')?.getContext('2d');
     if (pieCtx && types.length) {
-        const pieLabels = Array.from(new Set(statusDistribution.map(item => item.status)));
-        const datasets = types.map(type => ({
-            label: type,
-            data: pieLabels.map(status => {
-                const match = statusByType.find(item => item.type === type && item.status === status);
-                return match ? match.count : 0;
-            }),
-            backgroundColor: getTypeColor(type, 'bg'),
-            borderColor: getTypeColor(type, 'border'),
-            borderWidth: 1
-        }));
+        // Create type-status color variations
+        const getTypeStatusColor = (type, status) => {
+            const baseColors = {
+                'Program Hatası': {
+                    'Açık': '#EF4444',      // Red
+                    'Kapalı': '#DC2626',    // Darker Red
+                    'Test Edilecek': '#FCA5A5' // Light Red
+                },
+                'Yeni Talep': {
+                    'Açık': '#059669',      // Green
+                    'Kapalı': '#047857',    // Darker Green
+                    'Test Edilecek': '#6EE7B7' // Light Green
+                }
+            };
+            return baseColors[type]?.[status] || '#6B7280';
+        };
+
+        // Create data for each type-status combination
+        const pieData = [];
+        const pieLabels = [];
+        const pieColors = [];
+        
+        types.forEach(type => {
+            statusByType
+                .filter(item => item.type === type && item.count > 0)
+                .forEach(item => {
+                    pieLabels.push(`${type} - ${item.status}`);
+                    pieData.push(item.count);
+                    pieColors.push(getTypeStatusColor(type, item.status));
+                });
+        });
 
         new Chart(pieCtx, {
             type: 'doughnut',
-            data: { labels: pieLabels, datasets },
+            data: {
+                labels: pieLabels,
+                datasets: [{
+                    data: pieData,
+                    backgroundColor: pieColors,
+                    borderColor: pieColors.map(color => color),
+                    borderWidth: 2
+                }]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 layout: { padding: { bottom: 16 } },
                 plugins: {
-                    tooltip: { mode: 'index', intersect: false },
-                    legend: { position: 'top' }
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    },
+                    legend: { 
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15
+                        }
+                    }
                 }
             }
         });

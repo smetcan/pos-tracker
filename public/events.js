@@ -456,6 +456,32 @@ function attachBulguModalListeners(bulgu = {}, attachments = []) {
             
             const fileInput = document.getElementById('bulgu-attachments');
             if (targetBulguId && fileInput && fileInput.files.length > 0) {
+                // Validate file types and sizes
+                const allowedTypes = ['txt', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'];
+                const maxFileSize = 3 * 1024 * 1024; // 3 MB in bytes
+                
+                const invalidFiles = [];
+                for (const file of fileInput.files) {
+                    // Check file extension
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    if (!allowedTypes.includes(fileExtension)) {
+                        invalidFiles.push(`${file.name}: Desteklenmeyen dosya formatı (${fileExtension})`);
+                        continue;
+                    }
+                    
+                    // Check file size
+                    if (file.size > maxFileSize) {
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                        invalidFiles.push(`${file.name}: Dosya boyutu çok büyük (${fileSizeMB} MB, maksimum 3 MB)`);
+                    }
+                }
+                
+                // If there are invalid files, show error and stop
+                if (invalidFiles.length > 0) {
+                    const errorMessage = 'Dosya yükleme hatası:\n\n' + invalidFiles.join('\n');
+                    throw new Error(errorMessage);
+                }
+                
                 const formData = new FormData();
                 for (const file of fileInput.files) {
                     formData.append('attachments', file);
@@ -465,6 +491,7 @@ function attachBulguModalListeners(bulgu = {}, attachments = []) {
                     method: 'POST',
                     body: formData
                 });
+                
                 if (!fileResponse.ok) {
                     const errorData = await fileResponse.json();
                     throw new Error(errorData.error || 'Dosya yüklenirken bir hata oluştu.');
@@ -477,15 +504,103 @@ function attachBulguModalListeners(bulgu = {}, attachments = []) {
             showErrorModal(error.message);
         }
     });
+
+    // Add file validation for attachment input
+    const fileInput = document.getElementById('bulgu-attachments');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const allowedTypes = ['txt', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'];
+            const maxFileSize = 3 * 1024 * 1024; // 3 MB
+            const files = e.target.files;
+            
+            // Remove any existing error messages
+            const existingError = fileInput.parentNode.querySelector('.file-validation-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            if (files.length > 0) {
+                const invalidFiles = [];
+                for (const file of files) {
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    if (!allowedTypes.includes(fileExtension)) {
+                        invalidFiles.push(`• ${file.name}: Desteklenmeyen format (${fileExtension})`);
+                    } else if (file.size > maxFileSize) {
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                        invalidFiles.push(`• ${file.name}: Çok büyük (${fileSizeMB} MB)`);
+                    }
+                }
+                
+                if (invalidFiles.length > 0) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'file-validation-error text-red-600 text-xs mt-1';
+                    errorDiv.innerHTML = 'Geçersiz dosyalar:<br>' + invalidFiles.join('<br>');
+                    fileInput.parentNode.appendChild(errorDiv);
+                }
+            }
+        });
+    }
 }
 
     function attachBulguImportModalListeners() {
     // DÜZELTME: class ile tüm iptal butonlarını dinle
     document.querySelectorAll('.cancel-modal-btn').forEach(btn => btn.addEventListener('click', () => modalContainer.innerHTML = ''));
     
+    // Handle format selection
+    const formatRadios = document.querySelectorAll('input[name="importFormat"]');
+    const csvSection = document.getElementById('csv-import-section');
+    const jsonSection = document.getElementById('json-import-section');
+    const downloadJsonBtn = document.getElementById('download-json-template');
+    
+    formatRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'csv') {
+                csvSection.style.display = 'block';
+                jsonSection.style.display = 'none';
+            } else {
+                csvSection.style.display = 'none';
+                jsonSection.style.display = 'block';
+            }
+        });
+    });
+    
+    // Download JSON template
+    downloadJsonBtn?.addEventListener('click', () => {
+        const template = {
+            "records": [
+                {
+                    "Baslik": "POS donma sorunu",
+                    "Vendor": "Ingenico",
+                    "Etkilenen Modeller": "Move 3500,IWL 250",
+                    "Bulgu Tipi": "Program Hatası",
+                    "Etki Seviyesi": "Yüksek",
+                    "Tespit Tarihi": "2025-09-11",
+                    "Giren Kisi": "Ali Veli",
+                    "Detayli Aciklama": "Ödeme sonrası donma, reset gerekiyor. Müşteri şikayeti var.",
+                    "Notlar": "Vendor ile görüşüldü, çözüm bekleniyor",
+                    "Cozum Beklenen Versiyon": "53.08",
+                    "Vendor Takip No": "INC-12345",
+                    "Durum": "Açık",
+                    "Cozum Onaylayan Kisi": "Selçuk",
+                    "Cozum Onay Tarihi": "2025-09-12"
+                }
+            ]
+        };
+        
+        const dataStr = JSON.stringify(template, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'bulgu_template.json';
+        link.click();
+        URL.revokeObjectURL(url);
+    });
+    
     document.getElementById('bulgu-import-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const fileInput = document.getElementById('csv-file-input');
+        const formatSelected = document.querySelector('input[name="importFormat"]:checked').value;
+        const fileInput = formatSelected === 'csv' ? document.getElementById('csv-file-input') : document.getElementById('json-file-input');
         const progressDiv = document.getElementById('import-progress');
         const progressBar = document.getElementById('progress-bar');
         const progressCount = document.getElementById('progress-count');
@@ -494,7 +609,7 @@ function attachBulguModalListeners(bulgu = {}, attachments = []) {
         const startImportBtn = document.getElementById('start-import-btn');
 
         if (!fileInput.files.length) {
-            showErrorModal('Lütfen bir CSV dosyası seçin.');
+            showErrorModal(`Lütfen bir ${formatSelected.toUpperCase()} dosyası seçin.`);
             return;
         }
 
@@ -504,63 +619,225 @@ function attachBulguModalListeners(bulgu = {}, attachments = []) {
         importResultsDiv.innerHTML = '';
         startImportBtn.disabled = true;
 
-        Papa.parse(file, {
-            encoding: "ISO-8859-9",
-            header: true,
-            skipEmptyLines: true,
-            complete: async (results) => {
-                const records = results.data;
-                totalRecords.textContent = records.length;
-                let processedCount = 0;
-                const batchSize = 50;
-                let hasErrors = false;
+        if (formatSelected === 'json') {
+            // JSON import handling
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const jsonText = e.target.result;
+                    console.log('JSON text preview:', jsonText.substring(0, 200));
+                    
+                    const jsonData = JSON.parse(jsonText);
+                    console.log('Parsed JSON data:', jsonData);
+                    
+                    let records = [];
+                    if (jsonData.records && Array.isArray(jsonData.records)) {
+                        records = jsonData.records;
+                    } else if (Array.isArray(jsonData)) {
+                        records = jsonData;
+                    } else {
+                        throw new Error('JSON formatı geçersiz. "records" dizisi bekleniyordu.');
+                    }
+                    
+                    if (records.length === 0) {
+                        showMessage('JSON dosyası boş veya geçersiz.', 'error');
+                        return;
+                    }
+                    
+                    console.log('JSON records to import:', records);
+                    
+                    totalRecords.textContent = records.length;
+                    let processedCount = 0;
+                    const batchSize = 50;
+                    let hasErrors = false;
 
-                for (let i = 0; i < records.length; i += batchSize) {
-                    const batch = records.slice(i, i + batchSize);
-                    try {
-                        const response = await apiRequest('/api/bulgular/import', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ records: batch })
-                        });
-                        if (response.errors && response.errors.length > 0) {
-                            hasErrors = true;
-                            response.errors.forEach(err => {
-                                importResultsDiv.innerHTML += `<p class="text-red-600">Satır ${err.rowIndex}: ${err.error}</p>`;
+                    for (let i = 0; i < records.length; i += batchSize) {
+                        const batch = records.slice(i, i + batchSize);
+                        try {
+                            const response = await apiRequest('/api/bulgular/import', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ records: batch })
                             });
+                            if (response.errors && response.errors.length > 0) {
+                                hasErrors = true;
+                                response.errors.forEach(err => {
+                                    importResultsDiv.innerHTML += `<p class="text-red-600">Satır ${err.rowIndex}: ${err.error}</p>`;
+                                });
+                            }
+                            processedCount += batch.length;
+                            progressCount.textContent = processedCount;
+                            progressBar.style.width = `${(processedCount / records.length) * 100}%`;
+                        } catch (error) {
+                            hasErrors = true;
+                            importResultsDiv.innerHTML += `<p class="text-red-600">Toplu işlem sırasında hata: ${error.message}</p>`;
+                            processedCount += batch.length;
+                            progressCount.textContent = processedCount;
+                            progressBar.style.width = `${(processedCount / records.length) * 100}%`;
                         }
-                        processedCount += batch.length;
-                        progressCount.textContent = processedCount;
-                        progressBar.style.width = `${(processedCount / records.length) * 100}%`;
-                    } catch (error) {
-                        hasErrors = true;
-                        importResultsDiv.innerHTML += `<p class="text-red-600">Toplu işlem sırasında hata: ${error.message}</p>`;
-                        processedCount += batch.length;
-                        progressCount.textContent = processedCount;
-                        progressBar.style.width = `${(processedCount / records.length) * 100}%`;
                     }
-                }
 
-                progressDiv.classList.add('hidden');
-                importResultsDiv.classList.remove('hidden');
-                if (!hasErrors) {
-                    importResultsDiv.innerHTML = '<p class="text-green-600">Tüm kayıtlar başarıyla içeri aktarıldı.</p>';
-                    startImportBtn.disabled = true;
-                } else {
-                    startImportBtn.disabled = false;
-                    if (!importResultsDiv.innerHTML) {
-                        importResultsDiv.innerHTML = '<p class="text-red-600">İçe aktarma tamamlanamadı. Lütfen hataları kontrol edin.</p>';
+                    progressDiv.classList.add('hidden');
+                    importResultsDiv.classList.remove('hidden');
+                    if (!hasErrors) {
+                        importResultsDiv.innerHTML = '<p class="text-green-600">Tüm kayıtlar başarıyla içeri aktarıldı.</p>';
+                        startImportBtn.disabled = true;
+                    } else {
+                        startImportBtn.disabled = false;
+                        if (!importResultsDiv.innerHTML) {
+                            importResultsDiv.innerHTML = '<p class="text-red-600">İçe aktarma tamamlanamadı. Lütfen hataları kontrol edin.</p>';
+                        }
                     }
+                    bulgularData = [];
+                    fetchAndRenderBulgular({ page: 1 }); // Sayfayı yenile
+                    
+                } catch (error) {
+                    console.error('JSON parse error:', error);
+                    showErrorModal('JSON dosyasını ayrıştırma hatası: ' + error.message);
+                    progressDiv.classList.add('hidden');
+                    startImportBtn.disabled = false;
                 }
-                bulgularData = []
-                fetchAndRenderBulgular({ page: 1 }); // Sayfayı yenile
-            },
-            error: (err) => {
-                showErrorModal('CSV dosyasını ayrıştırma hatası: ' + err.message);
+            };
+            
+            reader.onerror = (err) => {
+                showErrorModal('JSON dosyasını okuma hatası: ' + err.message);
                 progressDiv.classList.add('hidden');
                 startImportBtn.disabled = false;
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+            return;
+        }
+
+        // Custom CSV parser for better reliability
+        const parseCSVManually = (csvText) => {
+            const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+            if (lines.length < 2) return { data: [], errors: ['CSV must have header and at least one data row'] };
+            
+            const parseCSVLine = (line) => {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    const nextChar = line[i + 1];
+                    
+                    if (char === '"') {
+                        if (inQuotes && nextChar === '"') {
+                            current += '"';
+                            i++; // Skip next quote
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim());
+                return result;
+            };
+            
+            const headers = parseCSVLine(lines[0]);
+            console.log('Manual parser - Headers:', headers);
+            
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                console.log(`Manual parser - Row ${i} values:`, values);
+                
+                if (values.length !== headers.length) {
+                    console.warn(`Row ${i}: Expected ${headers.length} fields, got ${values.length}`);
+                    continue;
+                }
+                
+                const record = {};
+                headers.forEach((header, index) => {
+                    record[header] = values[index] || '';
+                });
+                data.push(record);
             }
-        });
+            
+            return { data, errors: [] };
+        };
+        
+        // Try manual parsing first
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const csvText = e.target.result;
+            console.log('CSV text preview:', csvText.substring(0, 200));
+            
+            const results = parseCSVManually(csvText);
+            console.log('Manual parser results:', results);
+            
+            if (results.errors && results.errors.length > 0) {
+                console.error('Manual parser errors:', results.errors);
+                showMessage('CSV parsing error: ' + results.errors[0], 'error');
+                return;
+            }
+            
+            if (!results.data || results.data.length === 0) {
+                showMessage('CSV dosyası boş veya geçersiz.', 'error');
+                return;
+            }
+            
+            const records = results.data;
+            totalRecords.textContent = records.length;
+            let processedCount = 0;
+            const batchSize = 50;
+            let hasErrors = false;
+
+            for (let i = 0; i < records.length; i += batchSize) {
+                const batch = records.slice(i, i + batchSize);
+                try {
+                    const response = await apiRequest('/api/bulgular/import', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ records: batch })
+                    });
+                    if (response.errors && response.errors.length > 0) {
+                        hasErrors = true;
+                        response.errors.forEach(err => {
+                            importResultsDiv.innerHTML += `<p class="text-red-600">Satır ${err.rowIndex}: ${err.error}</p>`;
+                        });
+                    }
+                    processedCount += batch.length;
+                    progressCount.textContent = processedCount;
+                    progressBar.style.width = `${(processedCount / records.length) * 100}%`;
+                } catch (error) {
+                    hasErrors = true;
+                    importResultsDiv.innerHTML += `<p class="text-red-600">Toplu işlem sırasında hata: ${error.message}</p>`;
+                    processedCount += batch.length;
+                    progressCount.textContent = processedCount;
+                    progressBar.style.width = `${(processedCount / records.length) * 100}%`;
+                }
+            }
+
+            progressDiv.classList.add('hidden');
+            importResultsDiv.classList.remove('hidden');
+            if (!hasErrors) {
+                importResultsDiv.innerHTML = '<p class="text-green-600">Tüm kayıtlar başarıyla içeri aktarıldı.</p>';
+                startImportBtn.disabled = true;
+            } else {
+                startImportBtn.disabled = false;
+                if (!importResultsDiv.innerHTML) {
+                    importResultsDiv.innerHTML = '<p class="text-red-600">İçe aktarma tamamlanamadı. Lütfen hataları kontrol edin.</p>';
+                }
+            }
+            bulgularData = [];
+            fetchAndRenderBulgular({ page: 1 }); // Sayfayı yenile
+        };
+        
+        reader.onerror = (err) => {
+            showErrorModal('CSV dosyasını okuma hatası: ' + err.message);
+            progressDiv.classList.add('hidden');
+            startImportBtn.disabled = false;
+        };
+        
+        reader.readAsText(file, 'UTF-8');
     });
 }
 
@@ -1296,21 +1573,13 @@ function attachBulgularEventListeners(bulgular) {
 
     const applyFilterAndResetPage = () => fetchAndRenderBulgular({ page: 1 });
     const tipSelect = document.getElementById('bulgu-tip-filter');
-    const tipToggleButtons = Array.from(document.querySelectorAll('.bulgu-type-toggle'));
-
-    const updateTipControls = (value) => {
-        if (tipSelect && tipSelect.value !== value) tipSelect.value = value;
-        tipToggleButtons.forEach(btn => {
-            btn.classList.toggle('type-toggle-active', btn.dataset.tip === value);
-        });
-    };
 
     const setTipFilter = (value, { triggerFetch = true } = {}) => {
         if (!value) value = 'all';
         const normalized = value;
         const changed = bulguFilters.tip !== normalized;
         bulguFilters.tip = normalized;
-        updateTipControls(normalized);
+        if (tipSelect && tipSelect.value !== value) tipSelect.value = value;
         if (triggerFetch && (changed || normalized === 'all')) {
             applyFilterAndResetPage();
         }
@@ -1328,13 +1597,6 @@ function attachBulgularEventListeners(bulgular) {
             setTipFilter(e.target.value);
         });
     }
-    tipToggleButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const { tip } = button.dataset;
-            setTipFilter(tip);
-        });
-    });
-    updateTipControls(bulguFilters.tip);
     document.getElementById('clear-bulgu-filters-btn')?.addEventListener('click', () => {
         bulguFilters.searchTerm = '';
         bulguFilters.vendorId = 'all';

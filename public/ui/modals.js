@@ -1,4 +1,74 @@
-﻿    function showErrorModal(message) {
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿// Helper function for modal badge styling
+function getBadgeClassForModal(text) {
+    switch (text) {
+        case "Program Hatası": return 'px-3 py-1 text-sm font-semibold rounded-full badge-program-hatasi';
+        case "Yeni Talep": return 'px-3 py-1 text-sm font-semibold rounded-full badge-yeni-talep';
+        case "Açık": return 'px-2 py-1 text-xs font-medium rounded-full badge-acik';
+        case "Test Edilecek": return 'px-2 py-1 text-xs font-medium rounded-full badge-test-edilecek';
+        case "Kapalı": return 'px-2 py-1 text-xs font-medium rounded-full badge-kapali';
+        case "Yüksek": return 'px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 border border-red-200';
+        case "Orta": return 'px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200';
+        case "Düşük": return 'px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200';
+        default: return 'px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200';
+    }
+}
+
+// Helper function to get appropriate icons for field types
+function getFieldIcon(fieldType) {
+    const icons = {
+        'text': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>',
+        'email': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>',
+        'password': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>',
+        'select': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>',
+        'date': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>',
+        'tel': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>',
+        'textarea': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
+        'user': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>',
+        'building': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>',
+        'code': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>',
+        'tag': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z"></path></svg>',
+        'status': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+        'level': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>',
+        'version': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4l-2 16h14L17 4M11 9h2m-2 4h2"></path></svg>',
+        'number': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path></svg>',
+        'file': '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>'
+    };
+    return icons[fieldType] || icons['text'];
+}
+
+// Helper function to create enhanced input field HTML
+function createEnhancedField(fieldConfig) {
+    const { id, label, type = 'text', value = '', required = false, disabled = false, readonly = false, placeholder = '', options = [], iconType = type, className = '', rows = 3 } = fieldConfig;
+    
+    const icon = getFieldIcon(iconType);
+    const requiredAttr = required ? 'required' : '';
+    const disabledAttr = disabled ? 'disabled' : '';
+    const readonlyAttr = readonly ? 'readonly' : '';
+    const placeholderAttr = placeholder ? `placeholder="${placeholder}"` : '';
+    
+    let fieldHTML = '';
+    
+    if (type === 'select') {
+        const optionsHTML = options.map(opt => `<option value="${opt.value}" ${opt.selected ? 'selected' : ''}>${opt.text}</option>`).join('');
+        fieldHTML = `<select id="${id}" ${requiredAttr} ${disabledAttr} class="${className}">${optionsHTML}</select>`;
+    } else if (type === 'textarea') {
+        fieldHTML = `<textarea id="${id}" rows="${rows}" ${requiredAttr} ${disabledAttr} ${readonlyAttr} ${placeholderAttr} class="${className}">${value}</textarea>`;
+    } else {
+        fieldHTML = `<input type="${type}" id="${id}" value="${value}" ${requiredAttr} ${disabledAttr} ${readonlyAttr} ${placeholderAttr} class="${className}">`;
+    }
+    
+    return `
+        <div class="modal-input-group">
+            <label for="${id}">
+                ${icon}
+                ${label}${required ? ' <span class="text-red-500">*</span>' : ''}
+            </label>
+            ${fieldHTML}
+        </div>
+    `;
+}
+
+    function showErrorModal(message) {
     modalContainer.innerHTML = `
         <div class="fixed inset-0 bg-gray-600 bg-opacity-75 h-full w-full flex items-center justify-center z-50 p-4">
             <div class="relative bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all text-center">
@@ -56,14 +126,23 @@
                     <form id="vendor-form" class="space-y-4">
                         <input type="hidden" id="vendor-id" value="${vendor.id || ''}">
                         <div class="grid grid-cols-2 gap-x-6">
-                            <div>
-                                <label for="vendor-name" class="block text-sm font-medium">Vendor Adı</label>
-                                <input type="text" id="vendor-name" value="${vendor.name || ''}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                            </div>
-                            <div>
-                                <label for="vendor-make-code" class="block text-sm font-medium">Vendor Kodu</label>
-                                <input type="text" id="vendor-make-code" value="${vendor.makeCode || ''}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" ${isEdit ? 'disabled' : ''} required>
-                            </div>
+                            ${createEnhancedField({
+                                id: 'vendor-name',
+                                label: 'Vendor Adı',
+                                type: 'text',
+                                value: vendor.name || '',
+                                required: true,
+                                iconType: 'building'
+                            })}
+                            ${createEnhancedField({
+                                id: 'vendor-make-code',
+                                label: 'Vendor Kodu',
+                                type: 'text',
+                                value: vendor.makeCode || '',
+                                required: true,
+                                disabled: isEdit,
+                                iconType: 'code'
+                            })}
                         </div>
                     </form>
                     ${contactsSectionHTML}
@@ -92,25 +171,41 @@ function getUserModalHTML(user = {}) {
                 <div class="p-6 overflow-y-auto">
                     <form id="user-form" class="space-y-4">
                         <div class="grid grid-cols-2 gap-x-6">
-                            <div>
-                                <label for="user-name" class="block text-sm font-medium">İsim</label>
-                                <input type="text" id="user-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                            </div>
-                            <div>
-                                <label for="user-surname" class="block text-sm font-medium">Soyisim</label>
-                                <input type="text" id="user-surname" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                            </div>
-                            <div>
-                                <label for="user-userName" class="block text-sm font-medium">Kullanıcı Adı</label>
-                                <input type="text" id="user-userName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                            </div>
-                            <div>
-                                <label for="user-email" class="block text-sm font-medium">E-posta</label>
-                                <input type="email" id="user-email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                            </div>
+                            ${createEnhancedField({
+                                id: 'user-name',
+                                label: 'İsim',
+                                type: 'text',
+                                required: true,
+                                iconType: 'user'
+                            })}
+                            ${createEnhancedField({
+                                id: 'user-surname',
+                                label: 'Soyisim',
+                                type: 'text',
+                                required: true,
+                                iconType: 'user'
+                            })}
+                            ${createEnhancedField({
+                                id: 'user-userName',
+                                label: 'Kullanıcı Adı',
+                                type: 'text',
+                                required: true,
+                                iconType: 'user'
+                            })}
+                            ${createEnhancedField({
+                                id: 'user-email',
+                                label: 'E-posta',
+                                type: 'email',
+                                iconType: 'email'
+                            })}
                             <div class="col-span-2">
-                                <label for="user-password" class="block text-sm font-medium">Şifre</label>
-                                <input type="password" id="user-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                ${createEnhancedField({
+                                    id: 'user-password',
+                                    label: 'Şifre',
+                                    type: 'password',
+                                    required: true,
+                                    iconType: 'password'
+                                })}
                             </div>
                         </div>
                     </form>
@@ -136,10 +231,13 @@ function getResetPasswordModalHTML(userName) {
                 <div class="p-6">
                     <form id="reset-password-form" class="space-y-4">
                         <p class="text-sm text-center"><strong>${userName}</strong> kullanıcısı için yeni bir şifre belirleyin.</p>
-                        <div>
-                            <label for="new-password" class="block text-sm font-medium">Yeni Şifre</label>
-                            <input type="password" id="new-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
+                        ${createEnhancedField({
+                            id: 'new-password',
+                            label: 'Yeni Şifre',
+                            type: 'password',
+                            required: true,
+                            iconType: 'password'
+                        })}
                     </form>
                 </div>
                 <div class="flex items-center justify-end p-4 border-t rounded-b-md bg-gray-50 gap-2">
@@ -162,14 +260,20 @@ function getChangePasswordModalHTML() {
                 </div>
                 <div class="p-6">
                     <form id="change-password-form" class="space-y-4">
-                        <div>
-                            <label for="old-password" class="block text-sm font-medium">Mevcut Şifre</label>
-                            <input type="password" id="old-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
-                        <div>
-                            <label for="new-password" class="block text-sm font-medium">Yeni Şifre</label>
-                            <input type="password" id="new-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
+                        ${createEnhancedField({
+                            id: 'old-password',
+                            label: 'Mevcut Şifre',
+                            type: 'password',
+                            required: true,
+                            iconType: 'password'
+                        })}
+                        ${createEnhancedField({
+                            id: 'new-password',
+                            label: 'Yeni Şifre',
+                            type: 'password',
+                            required: true,
+                            iconType: 'password'
+                        })}
                     </form>
                 </div>
                 <div class="flex items-center justify-end p-4 border-t rounded-b-md bg-gray-50 gap-2">
@@ -199,18 +303,28 @@ function getChangePasswordModalHTML() {
                     <form id="contact-form" class="space-y-4">
                         <input type="hidden" id="contact-id" value="${contact.id || ''}">
                         <input type="hidden" id="contact-vendor-id" value="${vendor.id}">
-                        <div>
-                            <label for="contact-name" class="block text-sm font-medium">İsim</label>
-                            <input type="text" id="contact-name" value="${contact.name || ''}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
-                        <div>
-                            <label for="contact-email" class="block text-sm font-medium">E-posta</label>
-                            <input type="email" id="contact-email" value="${contact.email || ''}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label for="contact-phone" class="block text-sm font-medium">Telefon</label>
-                            <input type="tel" id="contact-phone" value="${contact.phone || ''}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
+                        ${createEnhancedField({
+                            id: 'contact-name',
+                            label: 'İsim',
+                            type: 'text',
+                            value: contact.name || '',
+                            required: true,
+                            iconType: 'user'
+                        })}
+                        ${createEnhancedField({
+                            id: 'contact-email',
+                            label: 'E-posta',
+                            type: 'email',
+                            value: contact.email || '',
+                            iconType: 'email'
+                        })}
+                        ${createEnhancedField({
+                            id: 'contact-phone',
+                            label: 'Telefon',
+                            type: 'tel',
+                            value: contact.phone || '',
+                            iconType: 'tel'
+                        })}
                         <div class="pt-2">
                             <div class="flex items-center">
                                 <input type="checkbox" id="contact-preferred" class="h-4 w-4 rounded border-gray-300" ${contact.preferred ? 'checked' : ''}>
@@ -248,17 +362,30 @@ function getChangePasswordModalHTML() {
                 <div class="p-6 overflow-y-auto">
                     <form id="model-form" class="space-y-4">
                         <input type="hidden" id="model-id" value="${model.id || ''}">
-                        <div>
-                            <label for="model-name" class="block text-sm font-medium text-gray-700">Model Adı</label>
-                            <input type="text" id="model-name" name="name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" value="${model.name || ''}" required>
-                        </div>
-                        <div>
-                            <label for="model-code" class="block text-sm font-medium text-gray-700">Model Kodu</label>
-                            <input type="text" id="model-code" name="code" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" value="${model.code || ''}" required>
-                        </div>
-                        <div>
-                            <label for="model-vendor-id" class="block text-sm font-medium text-gray-700">Vendor</label>
-                            <select id="model-vendor-id" name="vendorId" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+                        ${createEnhancedField({
+                            id: 'model-name',
+                            label: 'Model Adı',
+                            type: 'text',
+                            value: model.name || '',
+                            required: true,
+                            iconType: 'text',
+                            className: 'name="name"'
+                        })}
+                        ${createEnhancedField({
+                            id: 'model-code',
+                            label: 'Model Kodu',
+                            type: 'text',
+                            value: model.code || '',
+                            required: true,
+                            iconType: 'code',
+                            className: 'name="code"'
+                        })}
+                        <div class="modal-input-group">
+                            <label for="model-vendor-id">
+                                ${getFieldIcon('building')}
+                                Vendor <span class="text-red-500">*</span>
+                            </label>
+                            <select id="model-vendor-id" name="vendorId" required>
                                 <option value="">Seçiniz...</option>
                                 ${vendorOptions}
                             </select>
@@ -341,20 +468,29 @@ function getChangePasswordModalHTML() {
     return `
         <div class="fixed inset-0 bg-gray-600 bg-opacity-75 h-full w-full flex items-center justify-center z-50 p-4">
             <div class="relative bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all flex flex-col max-h-full">
-                <div class="relative flex items-center justify-center p-4 border-b rounded-t-md bg-gray-50">
-                    <h3 class="text-xl font-semibold text-gray-800">Bulgu Detayları: #${bulgu.id}</h3>
+                <div class="relative flex items-center justify-between p-4 border-b rounded-t-md bg-gray-50">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-xl font-semibold text-gray-800">Bulgu Detayları: #${bulgu.id}</h3>
+                        <span class="${getBadgeClassForModal(bulgu.bulguTipi)}">${bulgu.bulguTipi}</span>
+                    </div>
                     <button type="button" data-close-bulgu-view class="absolute top-3 right-4 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                     </button>
                 </div>
                 <div class="p-6 overflow-y-auto space-y-4">
-                    <h4 class="text-lg font-medium text-gray-900">${bulgu.baslik}</h4>
+                    <div class="bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border">
+                        <h4 class="text-lg font-medium text-gray-900 mb-2">${bulgu.baslik}</h4>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-gray-600">Tip:</span>
+                            <span class="${getBadgeClassForModal(bulgu.bulguTipi)}">${bulgu.bulguTipi}</span>
+                            <span class="text-sm text-gray-600 ml-4">Durum:</span>
+                            <span class="${getBadgeClassForModal(bulgu.status)}">${bulgu.status}</span>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-700">
                         <div><strong>Vendor:</strong> ${vendorName}</div>
-                        <div><strong>Bulgu Tipi:</strong> ${bulgu.bulguTipi}</div>
-                        <div><strong>Etki Seviyesi:</strong> ${bulgu.etkiSeviyesi}</div>
+                        <div><strong>Etki Seviyesi:</strong> <span class="${getBadgeClassForModal(bulgu.etkiSeviyesi)}">${bulgu.etkiSeviyesi}</span></div>
                         <div><strong>Tespit Tarihi:</strong> ${bulgu.tespitTarihi}</div>
-                        <div><strong>Durum:</strong> ${bulgu.status}</div>
                         <div><strong>Çözüm Versiyon:</strong> ${versionName || '-'}</div>
                     </div>
                     <div>
@@ -477,8 +613,11 @@ function getBulguModalHTML(vendors, models, versions, bulgu = {}, attachments = 
         <div class="fixed inset-0 bg-gray-600 bg-opacity-75 h-full w-full flex items-center justify-center z-50 p-4">
             <div class="relative bg-white rounded-lg shadow-xl w-full max-w-3xl transform transition-all flex flex-col max-h-full">
                 
-                <div class="relative flex items-center justify-center p-4 border-b rounded-t-md bg-gray-50">
-                    <h3 class="text-xl font-semibold text-gray-800">${title}</h3>
+                <div class="relative flex items-center justify-between p-4 border-b rounded-t-md bg-gray-50">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-xl font-semibold text-gray-800">${title}</h3>
+                        ${isEdit && bulgu.bulguTipi ? `<span class="${getBadgeClassForModal(bulgu.bulguTipi)}">${bulgu.bulguTipi}</span>` : ''}
+                    </div>
                     <button type="button" class="cancel-modal-btn absolute top-3 right-4 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                     </button>
@@ -487,67 +626,113 @@ function getBulguModalHTML(vendors, models, versions, bulgu = {}, attachments = 
                 <div class="p-6 overflow-y-auto">
                     <form id="bulgu-form" class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                            <div>
-                                <label for="bulgu-baslik" class="block text-sm font-medium text-gray-700">Başlık</label>
-                                <input type="text" id="bulgu-baslik" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" value="${bulgu.baslik || ''}" required>
-                            </div>
-                            <div>
-                                <label for="bulgu-vendor-id" class="block text-sm font-medium text-gray-700">Vendor</label>
-                                <select id="bulgu-vendor-id" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required ${isEdit ? 'disabled' : ''}>
+                            ${createEnhancedField({
+                                id: 'bulgu-baslik',
+                                label: 'Başlık',
+                                type: 'text',
+                                value: bulgu.baslik || '',
+                                required: true,
+                                iconType: 'text'
+                            })}
+                            <div class="modal-input-group">
+                                <label for="bulgu-vendor-id">
+                                    ${getFieldIcon('building')}
+                                    Vendor <span class="text-red-500">*</span>
+                                </label>
+                                <select id="bulgu-vendor-id" required ${isEdit ? 'disabled' : ''}>
                                     <option value="">Seçiniz...</option>
                                     ${vendorOptions}
                                 </select>
                             </div>
-                            <div>
-                                <label for="bulgu-tipi" class="block text-sm font-medium text-gray-700">Bulgu Tipi</label>
-                                <select id="bulgu-tipi" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>${bulguTipiOptions}</select>
+                            <div class="modal-input-group">
+                                <label for="bulgu-tipi">
+                                    ${getFieldIcon('tag')}
+                                    Bulgu Tipi (Zorunlu) <span class="text-red-500">*</span>
+                                </label>
+                                <select id="bulgu-tipi" required>${bulguTipiOptions}</select>
                             </div>
-                            <div>
-                                <label for="bulgu-etki-seviyesi" class="block text-sm font-medium text-gray-700">Etki Seviyesi</label>
-                                <select id="bulgu-etki-seviyesi" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>${etkiSeviyesiOptions}</select>
+                            <div class="modal-input-group">
+                                <label for="bulgu-etki-seviyesi">
+                                    ${getFieldIcon('level')}
+                                    Etki Seviyesi <span class="text-red-500">*</span>
+                                </label>
+                                <select id="bulgu-etki-seviyesi" required>${etkiSeviyesiOptions}</select>
                             </div>
-                             <div>
-                                <label for="bulgu-tespit-tarihi" class="block text-sm font-medium text-gray-700">Tespit Tarihi</label>
-                                <input type="date" id="bulgu-tespit-tarihi" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" value="${bulgu.tespitTarihi || ''}" required>
+                            ${createEnhancedField({
+                                id: 'bulgu-tespit-tarihi',
+                                label: 'Tespit Tarihi',
+                                type: 'date',
+                                value: bulgu.tespitTarihi || '',
+                                required: true,
+                                iconType: 'date'
+                            })}
+                            <div class="modal-input-group">
+                                <label for="bulgu-status">
+                                    ${getFieldIcon('status')}
+                                    Durum
+                                </label>
+                                <select id="bulgu-status" ${!isEdit ? 'disabled' : ''}>${statusOptions}</select>
                             </div>
-                            <div>
-                                <label for="bulgu-status" class="block text-sm font-medium text-gray-700">Durum</label>
-                                <select id="bulgu-status" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" ${!isEdit ? 'disabled' : ''}>${statusOptions}</select>
-                            </div>
-                             <div>
-                                <label for="bulgu-cozum-versiyon-id" class="block text-sm font-medium text-gray-700">Çözüm Beklenen Versiyon</label>
-                                <select id="bulgu-cozum-versiyon-id" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            <div class="modal-input-group">
+                                <label for="bulgu-cozum-versiyon-id">
+                                    ${getFieldIcon('version')}
+                                    Çözüm Beklenen Versiyon
+                                </label>
+                                <select id="bulgu-cozum-versiyon-id">
                                     <option value="">Önce vendor seçin...</option>
                                     ${versionOptions}
                                 </select>
                             </div>
-                            <div>
-                                <label for="bulgu-vendor-tracker-no" class="block text-sm font-medium text-gray-700">Vendor Takip No</label>
-                                <input type="text" id="bulgu-vendor-tracker-no" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" value="${bulgu.vendorTrackerNo || ''}">
-                            </div>
-                             <div>
-                                <label for="bulgu-giren-kullanici" class="block text-sm font-medium text-gray-700">Giren Kullanıcı</label>
-                                <input type="text" id="bulgu-giren-kullanici" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100" 
-                                       value="${girenKullaniciAdi}" readonly>
-                            </div>
+                            ${createEnhancedField({
+                                id: 'bulgu-vendor-tracker-no',
+                                label: 'Vendor Takip No',
+                                type: 'text',
+                                value: bulgu.vendorTrackerNo || '',
+                                iconType: 'number'
+                            })}
+                            ${createEnhancedField({
+                                id: 'bulgu-giren-kullanici',
+                                label: 'Giren Kullanıcı',
+                                type: 'text',
+                                value: girenKullaniciAdi,
+                                readonly: true,
+                                iconType: 'user',
+                                className: 'bg-gray-100'
+                            })}
                         </div>
                         <div id="onay-fields-container" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 ${bulgu.status === 'Kapalı' ? '' : 'hidden'}">
-                            <div>
-                                <label for="bulgu-cozum-onaylayan-kullanici" class="block text-sm font-medium text-gray-700">Çözüm Onaylayan Kullanıcı</label>
-                                <input type="text" id="bulgu-cozum-onaylayan-kullanici" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100" 
-                                       value="${bulgu.cozumOnaylayanKullanici || ''}" readonly>
-                            </div>
-                            <div>
-                                <label for="bulgu-cozum-onay-tarihi" class="block text-sm font-medium text-gray-700">Çözüm Onay Tarihi</label>
-                                <input type="date" id="bulgu-cozum-onay-tarihi" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" value="${bulgu.cozumOnayTarihi || ''}">
-                            </div>
+                            ${createEnhancedField({
+                                id: 'bulgu-cozum-onaylayan-kullanici',
+                                label: 'Çözüm Onaylayan Kullanıcı',
+                                type: 'text',
+                                value: bulgu.cozumOnaylayanKullanici || '',
+                                readonly: true,
+                                iconType: 'user',
+                                className: 'bg-gray-100'
+                            })}
+                            ${createEnhancedField({
+                                id: 'bulgu-cozum-onay-tarihi',
+                                label: 'Çözüm Onay Tarihi',
+                                type: 'date',
+                                value: bulgu.cozumOnayTarihi || '',
+                                iconType: 'date'
+                            })}
                             <div class="md:col-span-2">
-                                <label for="bulgu-cozum-onay-aciklama" class="block text-sm font-medium text-gray-700">Onay Açıklaması</label>
-                                <textarea id="bulgu-cozum-onay-aciklama" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">${bulgu.cozumOnayAciklamasi || ''}</textarea>
+                                ${createEnhancedField({
+                                    id: 'bulgu-cozum-onay-aciklama',
+                                    label: 'Onay Açıklaması',
+                                    type: 'textarea',
+                                    value: bulgu.cozumOnayAciklamasi || '',
+                                    rows: 3,
+                                    iconType: 'textarea'
+                                })}
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Etkilenen Modeller</label>
+                        <div class="modal-input-group">
+                            <label class="flex items-center gap-2">
+                                ${getFieldIcon('building')}
+                                Etkilenen Modeller
+                            </label>
                             <div class="mt-1 border rounded-md p-2">
                                  <div class="flex items-center border-b pb-2 mb-2">
                                     <input type="checkbox" id="select-all-models" class="h-4 w-4 rounded border-gray-300">
@@ -558,16 +743,27 @@ function getBulguModalHTML(vendors, models, versions, bulgu = {}, attachments = 
                                 </div>
                             </div>
                         </div>
-                        <div>
-                            <label for="bulgu-detayli-aciklama" class="block text-sm font-medium text-gray-700">Detaylı Açıklama</label>
-                            <textarea id="bulgu-detayli-aciklama" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">${bulgu.detayliAciklama || ''}</textarea>
-                        </div>
-                        <div>
-                            <label for="bulgu-notlar" class="block text-sm font-medium text-gray-700">Notlar</label>
-                            <textarea id="bulgu-notlar" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">${bulgu.notlar || ''}</textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">${isEdit ? 'Ekli Dosyalar' : 'Dosya Ekle'}</label>
+                        ${createEnhancedField({
+                            id: 'bulgu-detayli-aciklama',
+                            label: 'Detaylı Açıklama',
+                            type: 'textarea',
+                            value: bulgu.detayliAciklama || '',
+                            rows: 4,
+                            iconType: 'textarea'
+                        })}
+                        ${createEnhancedField({
+                            id: 'bulgu-notlar',
+                            label: 'Notlar',
+                            type: 'textarea',
+                            value: bulgu.notlar || '',
+                            rows: 3,
+                            iconType: 'textarea'
+                        })}
+                        <div class="modal-input-group">
+                            <label class="flex items-center gap-2">
+                                ${getFieldIcon('file')}
+                                ${isEdit ? 'Ekli Dosyalar' : 'Dosya Ekle'}
+                            </label>
                             ${isEdit ? `
                             <div id="attachments-list" class="mt-1 border rounded-md p-2 bg-gray-50 max-h-32 overflow-y-auto">
                                 ${attachments.length > 0 ? attachmentsHtml : '<p class="text-xs text-gray-500 text-center py-2">Ekli dosya yok.</p>'}
@@ -575,7 +771,12 @@ function getBulguModalHTML(vendors, models, versions, bulgu = {}, attachments = 
                             ` : ''}
                             <div class="mt-2">
                                 ${isEdit ? `<label for="bulgu-attachments" class="block text-sm font-medium text-gray-700 mb-1">Yeni Dosya Yükle</label>` : ''}
-                                <input type="file" id="bulgu-attachments" name="attachments" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                <input type="file" id="bulgu-attachments" name="attachments" multiple 
+                                       accept=".txt,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" 
+                                       class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                <p class="text-xs text-gray-500 mt-1">
+                                    İzin verilen formatlar: txt, doc, docx, xls, xlsx, png, jpg, jpeg • Maksimum dosya boyutu: 3 MB
+                                </p>
                             </div>
                         </div>
                     </form>
@@ -639,14 +840,22 @@ function getBulguModalHTML(vendors, models, versions, bulgu = {}, attachments = 
                     <div class="p-6 overflow-y-auto">
                         <form id="function-form" class="space-y-4">
                             <input type="hidden" id="function-id" value="${fn.id || ''}">
-                            <div>
-                                <label for="function-name" class="block text-sm font-medium text-gray-700">Fonksiyon Adı</label>
-                                <input type="text" id="function-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" value="${fn.name || ''}" required>
-                            </div>
-                            <div>
-                                <label for="function-description" class="block text-sm font-medium text-gray-700">Açıklama</label>
-                                <textarea id="function-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">${fn.description || ''}</textarea>
-                            </div>
+                            ${createEnhancedField({
+                                id: 'function-name',
+                                label: 'Fonksiyon Adı',
+                                type: 'text',
+                                value: fn.name || '',
+                                required: true,
+                                iconType: 'text'
+                            })}
+                            ${createEnhancedField({
+                                id: 'function-description',
+                                label: 'Açıklama',
+                                type: 'textarea',
+                                value: fn.description || '',
+                                rows: 3,
+                                iconType: 'textarea'
+                            })}
                         </form>
                     </div>
                     <div class="flex items-center justify-end p-4 border-t rounded-b-md bg-gray-50 gap-2">
@@ -720,7 +929,7 @@ function getBulguModalHTML(vendors, models, versions, bulgu = {}, attachments = 
     function getBulguImportModalHTML() {
     return `
         <div class="fixed inset-0 bg-gray-600 bg-opacity-75 h-full w-full flex items-center justify-center z-50 p-4">
-            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all flex flex-col max-h-full">
+            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all flex flex-col max-h-full">
                 <div class="relative flex items-center justify-center p-4 border-b rounded-t-md bg-gray-50">
                     <h3 class="text-xl font-semibold text-gray-800">Bulgu İçeri Aktar</h3>
                     <button type="button" class="cancel-modal-btn absolute top-3 right-4 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center">
@@ -729,13 +938,60 @@ function getBulguModalHTML(vendors, models, versions, bulgu = {}, attachments = 
                 </div>
                 <div class="p-6">
                     <form id="bulgu-import-form" class="space-y-4">
-                        <div>
-                            <label for="csv-file-input" class="block text-sm font-medium text-gray-700">CSV Dosyas&#305; Se&#231;in</label>
-                            <div class="mt-1 flex flex-col gap-2">
-                                <input type="file" id="csv-file-input" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
-                                <a href="/bulgu_sablon.csv" download class="text-sm text-blue-600 hover:underline">&#350;ablon dosyas&#305;n&#305; indir</a>
+                        <!-- Format Selection -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Dosya Formatı Seçin</label>
+                            <div class="flex space-x-4 mb-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="importFormat" value="csv" checked class="mr-2">
+                                    <span class="text-sm">CSV Dosyası</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="importFormat" value="json" class="mr-2">
+                                    <span class="text-sm">JSON Dosyası (Önerilen)</span>
+                                </label>
                             </div>
                         </div>
+
+                        <!-- CSV Import Section -->
+                        <div id="csv-import-section">
+                            <div>
+                                <label for="csv-file-input" class="block text-sm font-medium text-gray-700">CSV Dosyası Seçin</label>
+                                <div class="mt-1 flex flex-col gap-2">
+                                    <input type="file" id="csv-file-input" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <a href="./bulgu_sablon.csv" download class="text-sm text-blue-600 hover:underline">Şablon dosyasını indir</a>
+                                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                        <p class="text-xs text-blue-800 font-medium mb-1">İçeri aktarma kuralları:</p>
+                                        <ul class="text-xs text-blue-700 space-y-1">
+                                            <li>• Virgül (,) içeren metinleri çift tırnak içinde yazın: "Metin, virgüllü"</li>
+                                            <li>• "Açıklama" ve "Notlar" alanları uzun metinler içerebilir</li>
+                                            <li>• Örnek formatı için şablon dosyasını inceleyin</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- JSON Import Section -->
+                        <div id="json-import-section" style="display: none;">
+                            <div>
+                                <label for="json-file-input" class="block text-sm font-medium text-gray-700">JSON Dosyası Seçin</label>
+                                <div class="mt-1 flex flex-col gap-2">
+                                    <input type="file" id="json-file-input" accept=".json" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                    <button type="button" id="download-json-template" class="text-sm text-green-600 hover:underline text-left">JSON şablonu oluştur ve indir</button>
+                                    <div class="p-3 bg-green-50 border border-green-200 rounded-md">
+                                        <p class="text-xs text-green-800 font-medium mb-1">JSON Import Avantajları:</p>
+                                        <ul class="text-xs text-green-700 space-y-1">
+                                            <li>• Virgül, satır sonu ve özel karakterler için sorun yok</li>
+                                            <li>• Çok daha güvenilir veri aktarımı</li>
+                                            <li>• Karmaşık metinleri destekler</li>
+                                            <li>• "Move 3500,IWL 250" gibi çoklu modeller problem yaratmaz</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div id="import-progress" class="hidden text-sm text-gray-600">
                             <p>Yükleniyor... <span id="progress-count">0</span>/<span id="total-records">0</span></p>
                             <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
@@ -792,31 +1048,61 @@ function getVersionModalHTML(vendors, models, version = {}) {
                         <input type="hidden" id="version-id" value="${version.id || ''}">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                             <div>
-                                <label for="version-number" class="block text-sm font-medium text-gray-700">Versiyon Numarası</label>
+                                <label for="version-number" class="block text-sm font-medium text-gray-700">
+                                    <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                                    </svg>
+                                    Versiyon Numarası
+                                </label>
                                 <input type="text" id="version-number" name="versionNumber" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" value="${version.versionNumber || ''}" required>
                             </div>
                             <div>
-                                <label for="version-vendor-id" class="block text-sm font-medium text-gray-700">Vendor</label>
+                                <label for="version-vendor-id" class="block text-sm font-medium text-gray-700">
+                                    <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                    Vendor
+                                </label>
                                 <select id="version-vendor-id" name="vendorId" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
                                     <option value="">Seçiniz...</option>
                                     ${vendorOptions}
                                 </select>
                             </div>
                             <div>
-                                <label for="version-delivery-date" class="block text-sm font-medium text-gray-700">Teslim Tarihi</label>
+                                <label for="version-delivery-date" class="block text-sm font-medium text-gray-700">
+                                    <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Teslim Tarihi
+                                </label>
                                 <input type="date" id="version-delivery-date" name="deliveryDate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" value="${version.deliveryDate || ''}" required>
                             </div>
                              <div>
-                                <label for="version-status" class="block text-sm font-medium text-gray-700">Durum</label>
+                                <label for="version-status" class="block text-sm font-medium text-gray-700">
+                                    <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Durum
+                                </label>
                                 <select id="version-status" name="status" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" ${!isEdit ? 'disabled' : ''}>${statusOptions}</select>
                             </div>
                             <div>
-                                <label for="version-prod-onay-date" class="block text-sm font-medium text-gray-700">Prod Onay Tarihi</label>
+                                <label for="version-prod-onay-date" class="block text-sm font-medium text-gray-700">
+                                    <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Prod Onay Tarihi
+                                </label>
                                 <input type="date" id="version-prod-onay-date" name="prodOnayDate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" value="${version.prodOnayDate || ''}" ${version.status !== 'Prod' ? 'disabled' : ''}>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Geçerli Modeller</label>
+                            <label class="block text-sm font-medium text-gray-700">
+                                <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                                Geçerli Modeller
+                            </label>
                             <div class="mt-1 border rounded-md p-2">
                                  <div class="flex items-center border-b pb-2 mb-2">
                                     <input type="checkbox" id="select-all-models" class="h-4 w-4 rounded border-gray-300">
@@ -828,11 +1114,21 @@ function getVersionModalHTML(vendors, models, version = {}) {
                             </div>
                         </div>
                         <div>
-                            <label for="version-bug-istek-tarihcesi" class="block text-sm font-medium text-gray-700">Bug/İstek Tarihçesi</label>
+                            <label for="version-bug-istek-tarihcesi" class="block text-sm font-medium text-gray-700">
+                                <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Bug/İstek Tarihçesi
+                            </label>
                             <textarea id="version-bug-istek-tarihcesi" name="bugIstekTarihcesi" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">${version.bugIstekTarihcesi || ''}</textarea>
                         </div>
                         <div>
-                            <label for="version-ekler" class="block text-sm font-medium text-gray-700">Notlar</label>
+                            <label for="version-ekler" class="block text-sm font-medium text-gray-700">
+                                <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Notlar
+                            </label>
                             <textarea id="version-ekler" name="ekler" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">${version.ekler || ''}</textarea>
                         </div>
                     </form>
