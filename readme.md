@@ -21,7 +21,11 @@ Uygulama, modern ve reaktif bir arayüz ile kullanıcı dostu bir deneyim sunark
   - **Kimlik Doğrulama:** Güvenli kullanıcı girişi ve oturum yönetimi.
   - **Detaylı Kayıt Geçmişi:** Bir bulgu üzerinde yapılan her değişikliğin (durum değişikliği, atama vb.) kaydının tutulması.
   - **Dosya Ekleme:** Bulgu kayıtlarına ekran görüntüsü, log dosyası gibi dokümanlar ekleyebilme.
-  - **Veri Aktarımı:** Bulguları CSV formatında dışa aktarma ve CSV'den içeri aktarma.
+  - **Gelişmiş Veri İmport/Export Sistemi:** 
+    - **CSV İmport/Export:** Bulguları CSV formatında dışa aktarma ve içeri aktarma
+    - **JSON İmport (Önerilen):** Virgül ve özel karakterlerin sorun yaratmadığı, daha güvenilir JSON formatında veri aktarımı
+    - **Karmaşık Veri Desteği:** Açıklama ve notlar alanlarında virgül, satır sonu ve özel karakterler kullanılabilir
+    - **Çoklu Model Desteği:** "Move 3500,IWL 250" gibi virgül içeren model listelerinin doğru şekilde işlenmesi
 
 **🛠️ Teknik Yapı ve Mimarisi**
 
@@ -43,6 +47,41 @@ Proje, modern web teknolojileri kullanılarak Node.js tabanlı bir **REST API** 
 - **Grafikler:** Chart.js kütüphanesi ile dinamik ve interaktif grafikler.
 - **İstemci Taraflı Yönlendirme (Routing):** Hash (#) tabanlı yönlendirme ile sayfa yenilenmeden içerik değiştirilir.
 - **Kod Organizasyonu:** Frontend kodu public klasörü altında api.js, ui/, events.js gibi sorumluluklarına göre modüler dosyalara ayrılmıştır.
+
+
+**📄 Veri İmport/Export Özellikleri**
+
+Sistem, gelişmiş veri aktarım yetenekleri sunar ve karmaşık veri tiplerini destekler.
+
+**JSON İmport (Önerilen)**
+
+- **Avantajlar:**
+  - Virgül, satır sonu ve özel karakterler için sorun yok
+  - Çok daha güvenilir veri aktarımı
+  - Karmaşık metinleri destekler
+  - "Move 3500,IWL 250" gibi çoklu modeller problem yaratmaz
+
+- **Kullanım:**
+  1. İmport modalından "JSON Dosyası (Önerilen)" seçin
+  2. "JSON şablonu oluştur ve indir" butonuna tıklayın
+  3. İndirilen şablon dosyasını kendi verilerinizle düzenleyin
+  4. Düzenlenmiş JSON dosyasını sisteme yükleyin
+
+**CSV İmport**
+
+- **Kullanım:**
+  - Şablon dosyasını indirin: `bulgu_sablon.csv`
+  - Virgül içeren metinleri çift tırnak içinde yazın: `"Metin, virgüllü"`
+  - "Açıklama" ve "Notlar" alanları uzun metinler içerebilir
+  - Tüm zorunlu alanların doldurulduğundan emin olun
+
+**Desteklenen Alanlar**
+
+Her iki format da aşağıdaki tüm alanları destekler:
+- Baslik, Vendor, Etkilenen Modeller, Bulgu Tipi
+- Etki Seviyesi, Tespit Tarihi, Giren Kisi, Detayli Aciklama
+- Notlar, Cozum Beklenen Versiyon, Vendor Takip No
+- Durum, Cozum Onaylayan Kisi, Cozum Onay Tarihi
 
 
 **📦 Kurulum ve Başlatma**
@@ -105,6 +144,7 @@ Uygulamanın frontend'i, backend ile /api ön eki üzerinden RESTful prensipleri
 | PUT | /api/bulgular/:id | Belirtilen ID'ye sahip bulguyu günceller. |
 | DELETE | /api/bulgular/:id | Belirtilen ID'ye sahip bulguyu siler. |
 | GET | /api/bulgular/export | Filtrelenmiş bulguları CSV olarak dışa aktarır. |
+| POST | /api/bulgular/import | CSV veya JSON formatında toplu bulgu verisi içe aktarır. |
 | GET | /api/vendors | Tüm vendor'ları listeler. |
 | POST | /api/vendors | Yeni bir vendor ekler. |
 | ... | ... | (Diğer tüm models, versions, users, functions endpoint'leri) |
