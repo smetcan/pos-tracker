@@ -1,4 +1,4 @@
-﻿const sqlite3 = require('sqlite3').verbose();
+﻿﻿﻿const sqlite3 = require('sqlite3').verbose();
 const DB_PATH = './dev.db';
 
 const db = new sqlite3.Database(DB_PATH, (err) => {
@@ -48,6 +48,13 @@ function runMigrations() {
             }
             if (!cols.includes('ekler')) {
                 db.run("ALTER TABLE AppVersion ADD COLUMN ekler TEXT", (err) => { if (err) console.error('ALTER TABLE add ekler failed', err); else console.log('Added column ekler to AppVersion'); });
+            }
+            // Add new columns for information security approval
+            if (!cols.includes('bilgiGuvOnayDurumu')) {
+                db.run("ALTER TABLE AppVersion ADD COLUMN bilgiGuvOnayDurumu TEXT DEFAULT 'Alınmadı'", (err) => { if (err) console.error('ALTER TABLE add bilgiGuvOnayDurumu failed', err); else console.log('Added column bilgiGuvOnayDurumu to AppVersion'); });
+            }
+            if (!cols.includes('bilgiGuvOnayBelgePath')) {
+                db.run("ALTER TABLE AppVersion ADD COLUMN bilgiGuvOnayBelgePath TEXT", (err) => { if (err) console.error('ALTER TABLE add bilgiGuvOnayBelgePath failed', err); else console.log('Added column bilgiGuvOnayBelgePath to AppVersion'); });
             }
         });
 

@@ -233,8 +233,121 @@ function attachVersionModalListeners(version = null) {
     const prodOnayDateInput = document.getElementById('version-prod-onay-date');
     if(statusSelect && prodOnayDateInput) {
         statusSelect.addEventListener('change', (e) => {
-            prodOnayDateInput.disabled = e.target.value !== 'Prod';
-            if(e.target.value !== 'Prod') prodOnayDateInput.value = '';
+            prodOnayDateInput.disabled = e.target.checked !== 'Prod';
+            if(e.target.checked !== 'Prod') prodOnayDateInput.value = '';
+        });
+    }
+
+    // Handle information security approval status change
+    const bilgiGuvOnaySelect = document.getElementById('version-bilgi-guv-onay');
+    const belgeSection = document.getElementById('bilgi-guv-onay-belge-section');
+    
+    if (bilgiGuvOnaySelect && belgeSection) {
+        bilgiGuvOnaySelect.addEventListener('change', (e) => {
+            if (e.target.value === 'Alındı') {
+                belgeSection.style.display = 'block';
+            } else {
+                belgeSection.style.display = 'none';
+            }
+        });
+    }
+
+    // Handle information security approval document upload
+    const uploadBelgeBtn = document.getElementById('upload-belge-btn');
+    const deleteBelgeBtn = document.getElementById('delete-belge-btn');
+    const bilgiGuvOnayBelgeInput = document.getElementById('bilgi-guv-onay-belge');
+    
+    if (uploadBelgeBtn && bilgiGuvOnayBelgeInput) {
+        uploadBelgeBtn.addEventListener('click', async () => {
+            if (!bilgiGuvOnayBelgeInput.files || bilgiGuvOnayBelgeInput.files.length === 0) {
+                alert('Lütfen bir dosya seçin.');
+                return;
+            }
+            
+            const versionId = document.getElementById('version-id').value;
+            if (!versionId) {
+                alert('Versiyon ID bulunamadı.');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('belge', bilgiGuvOnayBelgeInput.files[0]);
+            
+            try {
+                const response = await fetch(`/api/versions/${versionId}/bilgi-guv-onay-belge`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.indexOf('application/json') !== -1) {
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Belge yükleme başarısız oldu.');
+                    }
+                    
+                    const result = await response.json();
+                    alert('Belge başarıyla yüklendi.');
+                    // Refresh the modal to show the uploaded document
+                    const updatedVersion = await apiRequest(`/api/versions/${versionId}`);
+                    const versionIndex = versionsData.findIndex(v => v.id == versionId);
+                    if (versionIndex !== -1) {
+                        versionsData[versionIndex] = updatedVersion;
+                    }
+                    modalContainer.innerHTML = getVersionModalHTML(vendorsData, modelsData, updatedVersion);
+                    attachVersionModalListeners(updatedVersion);
+                } else {
+                    // Handle non-JSON response (likely an error page)
+                    const errorText = await response.text();
+                    throw new Error('Sunucu hatası: ' + errorText.substring(0, 200) + '...');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Hata: ' + error.message);
+            }
+        });
+    }
+    
+    // Handle information security approval document deletion
+    if (deleteBelgeBtn && version && version.id) {
+        deleteBelgeBtn.addEventListener('click', async () => {
+            if (!confirm('Onay belgesini silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/versions/${version.id}/bilgi-guv-onay-belge`, {
+                    method: 'DELETE'
+                });
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.indexOf('application/json') !== -1) {
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Belge silme başarısız oldu.');
+                    }
+                    
+                    const result = await response.json();
+                    // Refresh the modal to show the deleted document
+                    const updatedVersion = {...version};
+                    updatedVersion.bilgiGuvOnayBelgePath = null;
+                    const versionIndex = versionsData.findIndex(v => v.id == version.id);
+                    if (versionIndex !== -1) {
+                        versionsData[versionIndex] = updatedVersion;
+                    }
+                    modalContainer.innerHTML = getVersionModalHTML(vendorsData, modelsData, updatedVersion);
+                    attachVersionModalListeners(updatedVersion);
+                } else {
+                    // Handle non-JSON response (likely an error page)
+                    const errorText = await response.text();
+                    throw new Error('Sunucu hatası: ' + errorText.substring(0, 200) + '...');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Hata: ' + error.message);
+            }
         });
     }
 
@@ -256,15 +369,47 @@ function attachVersionModalListeners(version = null) {
             prodOnayDate: document.getElementById('version-prod-onay-date').value,
             bugIstekTarihcesi: document.getElementById('version-bug-istek-tarihcesi').value,
             ekler: document.getElementById('version-ekler').value,
+            bilgiGuvOnayDurumu: document.getElementById('version-bilgi-guv-onay').value,
             modelIds: selectedModelIds
         };
 
         try {
+            // First, save the version data
+            let versionResponse;
             if (id) {
-                await apiRequest(`/api/versions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                versionResponse = await apiRequest(`/api/versions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             } else {
-                await apiRequest('/api/versions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                versionResponse = await apiRequest('/api/versions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             }
+            
+            // If this is an edit and there's a document file, upload it
+            if (id) {
+                const fileInput = document.getElementById('bilgi-guv-onay-belge');
+                if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('belge', fileInput.files[0]);
+                    
+                    const uploadResponse = await fetch(`/api/versions/${id}/bilgi-guv-onay-belge`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    // Check if upload was successful
+                    const contentType = uploadResponse.headers.get('content-type');
+                    if (contentType && contentType.indexOf('application/json') !== -1) {
+                        if (!uploadResponse.ok) {
+                            const errorData = await uploadResponse.json();
+                            throw new Error(errorData.error || 'Belge yükleme başarısız oldu.');
+                        }
+                        // Success - no need to show a message
+                    } else {
+                        // Handle non-JSON response (likely an error page)
+                        const errorText = await uploadResponse.text();
+                        throw new Error('Belge yükleme hatası: ' + errorText.substring(0, 200) + '...');
+                    }
+                }
+            }
+            
             modalContainer.innerHTML = '';
             versionsData = [];
             router();

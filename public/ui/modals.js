@@ -530,6 +530,28 @@ function getChangePasswordModalHTML() {
         ? version.models.split(',').map(m => `<span class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">${m.trim()}</span>`).join('')
         : '-';
 
+    // Document display for view modal
+    let documentDisplay = '';
+    if (version.bilgiGuvOnayBelgePath) {
+        documentDisplay = `
+        <div>
+            <strong class="text-sm font-medium">Bilgi Güvenliği Onay Belgesi:</strong>
+            <div class="mt-2 p-3 bg-gray-50 border rounded-md">
+                <a href="/${version.bilgiGuvOnayBelgePath}" target="_blank" class="text-sm text-blue-600 hover:underline">
+                    Belgeyi Görüntüle
+                </a>
+            </div>
+        </div>`;
+    } else if (version.bilgiGuvOnayDurumu === 'Alındı') {
+        documentDisplay = `
+        <div>
+            <strong class="text-sm font-medium">Bilgi Güvenliği Onay Belgesi:</strong>
+            <div class="mt-2 p-3 bg-gray-50 border rounded-md">
+                <p class="text-sm text-gray-500">Belge yüklenmemiş</p>
+            </div>
+        </div>`;
+    }
+
     return `
         <div class="fixed inset-0 bg-gray-600 bg-opacity-75 h-full w-full flex items-center justify-center z-50 p-4">
             <div class="relative bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all flex flex-col max-h-full">
@@ -545,6 +567,7 @@ function getChangePasswordModalHTML() {
                         <div><strong>Teslim Tarihi:</strong> ${version.deliveryDate || '-'}</div>
                         <div><strong>Durum:</strong> <span class="px-2 py-1 text-xs font-medium rounded-full ${version.status === 'Prod' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${version.status}</span></div>
                         <div><strong>Prod Onay Tarihi:</strong> ${version.prodOnayDate || '-'}</div>
+                        <div><strong>Bilgi Güvenliği Onayı:</strong> <span class="px-2 py-1 text-xs font-medium rounded-full ${version.bilgiGuvOnayDurumu === 'Alındı' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${version.bilgiGuvOnayDurumu || 'Alınmadı'}</span></div>
                     </div>
                     <div>
                         <strong class="text-sm font-medium">Geçerli Modeller:</strong>
@@ -558,6 +581,7 @@ function getChangePasswordModalHTML() {
                         <strong class="text-sm font-medium">Notlar:</strong>
                         <p class="mt-2 p-3 bg-gray-50 border rounded-md whitespace-pre-wrap text-sm">${version.ekler || '-'}</p>
                     </div>
+                    ${documentDisplay}
                 </div>
                 <div class="flex items-center justify-end p-4 border-t rounded-b-md bg-gray-50">
                     <button type="button" class="close-modal-btn px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium">Kapat</button>
@@ -1031,6 +1055,48 @@ function getVersionModalHTML(vendors, models, version = {}) {
     }).join('');
 
     const statusOptions = ['Test', 'Prod'].map(s => `<option value="${s}" ${version.status === s ? 'selected' : ''}>${s}</option>`).join('');
+    
+    // Bilgi Güvenliği Onayı options
+    const bilgiGuvOnayOptions = ['Alınmadı', 'Alındı'].map(s => `<option value="${s}" ${version.bilgiGuvOnayDurumu === s ? 'selected' : ''}>${s}</option>`).join('');
+
+    // For edit mode, add a hidden input to track if there's a document file
+    const hiddenInput = isEdit ? '<input type="hidden" id="has-document-file" value="false">' : '';
+
+    // Document section for edit mode
+    let documentSection = '';
+    if (isEdit) {
+        const displayStyle = version.bilgiGuvOnayDurumu !== 'Alındı' ? 'style="display: none;"' : '';
+        const documentContent = version.bilgiGuvOnayBelgePath ? 
+            `<div class="flex items-center justify-between mb-2">
+                <a href="/${version.bilgiGuvOnayBelgePath}" target="_blank" class="text-sm text-blue-600 hover:underline">
+                    Belgeyi Görüntüle
+                </a>
+                <button type="button" id="delete-belge-btn" class="text-sm text-red-600 hover:text-red-800">
+                    Belgeyi Sil
+                </button>
+            </div>` :
+            `<div class="mb-2">
+                <input type="file" id="bilgi-guv-onay-belge" name="belge" accept=".msg,.pdf,.doc,.docx" 
+                       class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <p class="text-xs text-gray-500 mt-1">
+                    İzin verilen formatlar: .msg, .pdf, .doc, .docx • Maksimum dosya boyutu: 5 MB
+                </p>
+            </div>`;
+            
+        documentSection = `
+            <div id="bilgi-guv-onay-belge-section" ${displayStyle}>
+                <label class="block text-sm font-medium text-gray-700">
+                    <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Bilgi Güvenliği Onay Belgesi
+                </label>
+                <div class="mt-1 border rounded-md p-3 bg-gray-50">
+                    ${documentContent}
+                </div>
+            </div>
+        `;
+    }
 
     return `
         <div class="fixed inset-0 bg-gray-600 bg-opacity-75 h-full w-full flex items-center justify-center z-50 p-4">
@@ -1046,6 +1112,7 @@ function getVersionModalHTML(vendors, models, version = {}) {
                 <div class="p-6 overflow-y-auto">
                     <form id="version-form" class="space-y-6">
                         <input type="hidden" id="version-id" value="${version.id || ''}">
+                        ${hiddenInput}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                             <div>
                                 <label for="version-number" class="block text-sm font-medium text-gray-700">
@@ -1095,6 +1162,15 @@ function getVersionModalHTML(vendors, models, version = {}) {
                                 </label>
                                 <input type="date" id="version-prod-onay-date" name="prodOnayDate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" value="${version.prodOnayDate || ''}" ${version.status !== 'Prod' ? 'disabled' : ''}>
                             </div>
+                            <div>
+                                <label for="version-bilgi-guv-onay" class="block text-sm font-medium text-gray-700">
+                                    <svg class="icon inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                    </svg>
+                                    Bilgi Güvenliği Onayı
+                                </label>
+                                <select id="version-bilgi-guv-onay" name="bilgiGuvOnayDurumu" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">${bilgiGuvOnayOptions}</select>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">
@@ -1119,7 +1195,7 @@ function getVersionModalHTML(vendors, models, version = {}) {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
                                 Bug/İstek Tarihçesi
-                            </label>
+                                </label>
                             <textarea id="version-bug-istek-tarihcesi" name="bugIstekTarihcesi" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">${version.bugIstekTarihcesi || ''}</textarea>
                         </div>
                         <div>
@@ -1131,6 +1207,7 @@ function getVersionModalHTML(vendors, models, version = {}) {
                             </label>
                             <textarea id="version-ekler" name="ekler" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">${version.ekler || ''}</textarea>
                         </div>
+                        ${documentSection}
                     </form>
                 </div>
 

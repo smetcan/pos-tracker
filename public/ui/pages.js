@@ -381,9 +381,11 @@
         
     const versionsTableRows = versions.map(version => {
         const statusClass = version.status === 'Prod' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+        const bilgiGuvOnayClass = version.bilgiGuvOnayDurumu === 'Alındı' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
         return `
          <tr class="border-b"><td class="p-3 font-medium"><a href="#" class="view-version-link text-blue-600" data-version-id="${version.id}">${version.versionNumber}</a></td><td class="p-3">${version.vendorName}</td><td class="p-3">${version.deliveryDate}</td><td class="p-3 text-xs text-gray-600">${version.models || ''}</td>
             <td class="p-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${version.status}</span></td><td class="p-3">${version.prodOnayDate || '-'}</td>
+            <td class="p-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${bilgiGuvOnayClass}">${version.bilgiGuvOnayDurumu || 'Alınmadı'}</span></td>
             <td class="p-3 text-right">
                 <button type="button" class="edit-version-btn inline-flex items-center justify-center p-1 text-blue-600 hover:text-blue-800" data-version-id="${version.id}" aria-label="Versiyon düzenle">
                     ${actionEditIcon}
@@ -498,6 +500,7 @@
                         <th class="p-3 text-left">Geçerli Modeller</th>
                         <th class="p-3 text-left sortable-header cursor-pointer select-none" data-table="versions" data-sort-key="status">Durum ${getSortIcon(versionSort, 'status')}</th>
                         <th class="p-3 text-left sortable-header cursor-pointer select-none" data-table="versions" data-sort-key="prodOnayDate">Prod Onay Tarihi ${getSortIcon(versionSort, 'prodOnayDate')}</th>
+                        <th class="p-3 text-left">Bilgi Güvenliği Onayı</th>
                         <th class="p-3 text-right">İşlemler</th></tr></thead><tbody>${versionsTableRows}</tbody></table></div>
                 </div>
                 <div id="functions-tab" class="tab-content ${activeTab === 'functions' ? 'active' : ''}">
