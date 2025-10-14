@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
+const path = require('path');
 const db = require('../config/db');
 const router = express.Router();
 
@@ -29,10 +30,8 @@ async function logHistory(bulguId, req, action, details = '') {
 // Dosya Yükleme (Multer) Ayarları
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const dest = 'uploads/';
-        if (!fs.existsSync(dest)) {
-            fs.mkdirSync(dest);
-        }
+        const dest = path.join('uploads', 'issues');
+        fs.mkdirSync(dest, { recursive: true });
         cb(null, dest);
     },
     filename: function (req, file, cb) {
@@ -96,7 +95,8 @@ router.post('/bulgu/:id/attachments', (req, res) => {
     const sql = `INSERT INTO attachments (bulguId, originalName, fileName, filePath, fileSize, mimeType) VALUES (?, ?, ?, ?, ?, ?)`;
     const insertPromises = req.files.map(file => {
         return new Promise((resolve, reject) => {
-            const params = [bulguId, file.originalname, file.filename, file.path, file.size, file.mimetype];
+            const storedPath = file.path.replace(/\\/g, '/'); // use forward slashes for consistent static serving
+            const params = [bulguId, file.originalname, file.filename, storedPath, file.size, file.mimetype];
             db.run(sql, params, function(err) {
                 if (err) {
                     fs.unlink(file.path, (unlinkErr) => {
